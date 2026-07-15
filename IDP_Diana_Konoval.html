@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDP-2026 — Diana Konoval</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef1f0;
+    --paper:#ffffff;
+    --ink:#14213d;
+    --ink-soft:#5c6672;
+    --ink-faint:#8b93a0;
+    --border:#dde2e5;
+    --pass:#1f7a4c;
+    --pass-bg:#e6f4ec;
+    --prog:#a8730a;
+    --prog-bg:#faf1de;
+    --todo:#8b93a0;
+    --todo-bg:#eef0f2;
+    --accent:#2f5f8a;
+    --accent-soft:#e7eff5;
+    --high:#a3402c;
+    --high-bg:#f7e9e5;
+    --display:'Space Grotesk',sans-serif;
+    --body:'IBM Plex Sans',sans-serif;
+    --mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      linear-gradient(180deg,var(--bg) 0%, var(--bg) 100%);
+    color:var(--ink);
+    font-family:var(--body);
+    line-height:1.5;
+    padding:0 0 80px 0;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- Header / run summary ---------- */
+  .runbar{
+    background:var(--ink);
+    color:#fff;
+    padding:34px 0 26px 0;
+    border-bottom:4px solid var(--accent);
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#9fb3d1;
+    margin:0 0 10px 0;
+  }
+  h1{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:34px;
+    margin:0 0 6px 0;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:#c3ccd9;
+    font-size:15px;
+    margin:0 0 22px 0;
+  }
+  .meta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 28px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:#c3ccd9;
+    margin-bottom:22px;
+  }
+  .meta-row b{color:#fff;font-weight:600;}
+
+  .runstat{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:10px;
+    padding:16px 18px;
+  }
+  .runstat .pct{
+    font-family:var(--display);
+    font-size:30px;
+    font-weight:700;
+    min-width:70px;
+  }
+  .runstat .bar-track{
+    flex:1;
+    height:10px;
+    background:rgba(255,255,255,.14);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .runstat .bar-fill{
+    height:100%;
+    background:linear-gradient(90deg,#3a7a52,#57a374);
+    width:0%;
+    transition:width .4s ease;
+  }
+  .runstat .label{font-family:var(--mono);font-size:12px;color:#c3ccd9;}
+  .target-note{
+    font-size:13px;
+    color:#c3ccd9;
+    margin-top:12px;
+  }
+  .target-note b{color:#e8c77a;}
+
+  /* ---------- Phase sections ---------- */
+  .phase{margin-top:44px;}
+  .phase-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:10px;
+    margin-bottom:18px;
+  }
+  .phase-title{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:20px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .phase-tag{
+    font-family:var(--mono);
+    font-size:12px;
+    background:var(--ink);
+    color:#fff;
+    padding:2px 8px;
+    border-radius:4px;
+  }
+  .phase-dates{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .phase-progress{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .mini-track{width:90px;height:6px;background:var(--todo-bg);border-radius:4px;overflow:hidden;}
+  .mini-fill{height:100%;background:var(--pass);width:0%;transition:width .4s ease;}
+  .phase-blurb{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:-6px 0 20px 0;
+    max-width:640px;
+  }
+
+  /* ---------- Test case card ---------- */
+  .case{
+    background:var(--paper);
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .case-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 18px;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+    user-select:none;
+  }
+  .case-head-left{display:flex;align-items:center;gap:12px;min-width:0;}
+  .case-id{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-faint);
+    white-space:nowrap;
+  }
+  .case-title{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:16px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .priority{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:100px;
+    white-space:nowrap;
+  }
+  .priority.high{background:var(--high-bg);color:var(--high);}
+  .priority.medium{background:var(--prog-bg);color:var(--prog);}
+
+  .status-badge{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.06em;
+    padding:5px 10px;
+    border-radius:6px;
+    white-space:nowrap;
+  }
+  .status-badge.todo{background:var(--todo-bg);color:var(--todo);}
+  .status-badge.progress{background:var(--prog-bg);color:var(--prog);}
+  .status-badge.pass{background:var(--pass-bg);color:var(--pass);}
+
+  .chev{
+    font-size:12px;
+    color:var(--ink-faint);
+    transition:transform .2s ease;
+    flex-shrink:0;
+  }
+  .case.open .chev{transform:rotate(180deg);}
+
+  .case-body{
+    padding:0 18px 18px 18px;
+    display:none;
+  }
+  .case.open .case-body{display:block;}
+
+  .field{margin-top:14px;}
+  .field-label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:6px;
+  }
+  .precondition{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    background:var(--todo-bg);
+    border-left:3px solid var(--todo);
+    padding:8px 12px;
+    border-radius:0 6px 6px 0;
+  }
+  .expected{
+    font-size:13.5px;
+    color:var(--pass);
+    background:var(--pass-bg);
+    border-left:3px solid var(--pass);
+    padding:8px 12px;
+    border-radius:0 6px 6px 0;
+  }
+  .steps{list-style:none;margin:0;padding:0;}
+  .step{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:7px 0;
+    border-bottom:1px solid #f1f2f4;
+    font-size:14px;
+  }
+  .step:last-child{border-bottom:none;}
+  .step input[type=checkbox]{
+    margin-top:3px;
+    width:16px;height:16px;
+    accent-color:var(--pass);
+    flex-shrink:0;
+    cursor:pointer;
+  }
+  .step label{cursor:pointer;}
+  .step.checked label{color:var(--ink-faint);text-decoration:line-through;}
+  .resources{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .resources i{color:var(--ink-faint);}
+  textarea.notes{
+    width:100%;
+    min-height:56px;
+    resize:vertical;
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 10px;
+    font-family:var(--body);
+    font-size:13.5px;
+    color:var(--ink);
+    background:#fbfbfa;
+  }
+  textarea.notes:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
+
+  /* ---------- Footer ---------- */
+  .footer{
+    margin-top:48px;
+    background:var(--accent-soft);
+    border:1px solid #cfe0ee;
+    border-radius:10px;
+    padding:20px 22px;
+  }
+  .footer h3{
+    font-family:var(--display);
+    font-size:15px;
+    margin:0 0 8px 0;
+  }
+  .footer p{font-size:13.5px;color:var(--ink-soft);margin:0 0 8px 0;}
+  .footer p:last-child{margin-bottom:0;}
+  .save-note{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--ink-faint);
+    text-align:center;
+    margin-top:18px;
+  }
+
+  @media (max-width:600px){
+    h1{font-size:26px;}
+    .case-title{max-width:150px;}
+    .runstat{flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+
+<div class="runbar">
+  <div class="wrap">
+    <p class="eyebrow">Individual Development Plan &middot; Test Suite IDP-2026</p>
+    <h1>Diana Konoval — QA Engineer</h1>
+    <p class="sub">Lead: Tetiana Kornyk · Review cadence: check-ins as needed, full re-assessment in 9 months</p>
+    <div class="meta-row">
+      <span>CURRENT LEVEL: <b>Junior 2</b></span>
+      <span>TARGET LEVEL: <b>Junior 3</b></span>
+      <span>LAST SCORE: <b>23.8 / 75 (31.7%)</b></span>
+      <span>NEXT ASSESSMENT: <b id="reviewDate">—</b></span>
+    </div>
+    <div class="runstat">
+      <div class="pct" id="overallPct">0%</div>
+      <div class="bar-track"><div class="bar-fill" id="overallBar"></div></div>
+      <div class="label" id="overallLabel">0 / 0 steps passed</div>
+    </div>
+    <p class="target-note">Goal: close the gap between <b>23.8</b> and the <b>30-pt</b> threshold for Junior 3 by working through the 8 test cases below over the next <b>9 months</b>.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="phase" data-phase="p1">
+    <div class="phase-head">
+      <div class="phase-title"><span class="phase-tag">Phase 1</span> Foundations</div>
+      <div class="phase-dates">Months 1–3</div>
+    </div>
+    <div class="phase-progress" style="margin-bottom:16px;">
+      <span>Phase progress</span>
+      <div class="mini-track"><div class="mini-fill" data-qfill="p1"></div></div>
+      <span data-qlabel="p1">0%</span>
+    </div>
+    <p class="phase-blurb">Start with the two lowest-scoring, highest-leverage areas: networking fundamentals and non-functional testing types. These come up in almost every other section, so closing them first pays off for the rest of the plan.</p>
+
+    <div class="case" data-case="QA-IDP-01">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-01</span>
+          <span class="case-title">Networks &amp; Protocols</span>
+          <span class="priority high">High</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Already comfortable with HTTP/HTTPS — a solid starting point. The next step is rounding this out with TCP, IP, DNS, proxy servers, CDN, basic network utilities, and the full range of HTTP status code groups, which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn the basics of client-server communication: how desktop clients, web clients, and mobile clients differ</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Learn what HTTP is and how it's used to transfer web pages between computers</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn what TCP is: how it splits data into numbered pieces before sending and reassembles them after delivery</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn what IP is: how it makes sure a packet is delivered to the correct address</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Learn what DNS is and how it maps domain names to IP addresses and back</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Learn what a proxy server is: how it sits between a computer and the internet, and processes requests on its behalf</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Learn what a CDN is and why it's needed: serving content from the server closest to the user to speed up loading for many concurrent users</label></li>
+            <li class="step"><input type="checkbox" data-step="7"><label>Practice the network utilities ping, traceroute, and nslookup on your own machine, and learn to read their output (packet loss/latency, route to destination, DNS lookup)</label></li>
+            <li class="step"><input type="checkbox" data-step="8"><label>Memorize the 5 HTTP status code groups — 1xx Informational, 2xx Success, 3xx Redirection, 4xx Client Errors, 5xx Server Errors — with one example code for each</label></li>
+            <li class="step"><input type="checkbox" data-step="9"><label>Write a one-page cheat sheet in your own words covering: client-server model, HTTP, TCP, IP, DNS, proxy, CDN</label></li>
+            <li class="step"><input type="checkbox" data-step="10"><label>Explain the cheat sheet out loud to a teammate or your lead</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Can explain the client-server model and what HTTP, TCP, IP, DNS, a proxy server, and a CDN each do, in own words. Correctly names all 5 HTTP status code groups. Can run and interpret ping, traceroute, and nslookup.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> MDN HTTP docs · practice running ping / traceroute / nslookup on your own machine</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="case" data-case="QA-IDP-02">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-02</span>
+          <span class="case-title">Non-functional Testing</span>
+          <span class="priority high">High</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Already familiar with load and stress testing as a foundation. The next step is rounding out the full picture of non-functional testing — stability, usability, localization, and documentation testing, the 4 performance testing subtypes, the full list of compatibility environments, and the 5 usability criteria — which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn all types of non-functional testing: stability/reliability, usability, load, performance, stress, and localization — plus how documentation testing relates</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Learn why performance testing matters: making sure the product handles a large number of concurrent users and large volumes of data while staying fast under normal conditions</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn the 4 performance testing subtypes: load (normal conditions), stress (extreme load), stability (long-duration work), and volume (increased data amounts)</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn the full list of environments compatibility testing covers: browsers, hardware, networks (3G/WiFi/etc.), mobile devices &amp; platforms (Android/iOS/Windows), operating systems, software versions, and databases</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Learn what usability testing is: a method for evaluating an interface's convenience and efficiency</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Memorize the 5 usability criteria — usefulness, efficiency, learnability/intuitiveness, satisfaction, accessibility — with a real example for each</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Draft a mini non-functional test plan for one feature on your current project, covering at least 3 of the types above</label></li>
+            <li class="step"><input type="checkbox" data-step="7"><label>Write a one-page cheat sheet in your own words covering all the types and criteria above</label></li>
+            <li class="step"><input type="checkbox" data-step="8"><label>Explain the cheat sheet out loud to a teammate or your lead</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Correctly names all non-functional testing types (stability, usability, load, performance, stress, localization, +documentation), explains the 4 performance testing subtypes with a "why" for each, defines compatibility testing and lists the environments it covers, and names all 5 usability criteria with an example for each.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> ISTQB Foundation syllabus, non-functional testing chapter</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" data-phase="p2">
+    <div class="phase-head">
+      <div class="phase-title"><span class="phase-tag">Phase 2</span> Data, APIs &amp; Process</div>
+      <div class="phase-dates">Months 4–6</div>
+    </div>
+    <div class="phase-progress" style="margin-bottom:16px;">
+      <span>Phase progress</span>
+      <div class="mini-track"><div class="mini-fill" data-qfill="p2"></div></div>
+      <span data-qlabel="p2">0%</span>
+    </div>
+    <p class="phase-blurb">With the fundamentals in place, move into tooling and process: databases, structured API testing, and getting closer to requirements earlier. These give you concrete, portfolio-able artifacts to show at your review.</p>
+
+    <div class="case" data-case="QA-IDP-03">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-03</span>
+          <span class="case-title">Databases &amp; SQL / GraphQL</span>
+          <span class="priority medium">Medium</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Has some initial hands-on SQL experience from one project — a good base to build on. The next step is developing a fuller picture of databases and RDBMS, primary/foreign keys, join types, CRUD, and the key differences between SQL and GraphQL, which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn what a database is and why it's used: an organized structure for storing, changing, and processing large volumes of data, typically for dynamic websites (online stores, portals, corporate sites) stored as related tables</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Practice explaining what SQL is in plain language to a non-IT person</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn what RDBMS is: a relational database management system that stores data as tables</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn and practice the basic SQL commands: INSERT INTO, SELECT, UPDATE, DELETE, JOIN, CREATE DATABASE, CREATE TABLE</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Learn what CRUD stands for: Create, Read, Update, Delete — the 4 core data management functions</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Learn what a primary key is and what a foreign key is</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Learn the types of SQL joins: INNER, OUTER (LEFT OUTER, RIGHT OUTER, FULL OUTER), CROSS, and self-join</label></li>
+            <li class="step"><input type="checkbox" data-step="7"><label>Learn the key differences between SQL and GraphQL, including that GraphQL is often built on top of NoSQL databases for APIs</label></li>
+            <li class="step"><input type="checkbox" data-step="8"><label>Learn what response format a GraphQL query returns (JSON)</label></li>
+            <li class="step"><input type="checkbox" data-step="9"><label>Get read access to a staging DB and run 5 practice queries against real data</label></li>
+            <li class="step"><input type="checkbox" data-step="10"><label>Write a one-page cheat sheet in your own words covering all the above</label></li>
+            <li class="step"><input type="checkbox" data-step="11"><label>Explain the cheat sheet out loud to a teammate or your lead</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Explains what a database and RDBMS are in plain language, runs basic SQL commands (SELECT/INSERT/UPDATE/DELETE/JOIN/CREATE) unassisted, correctly defines CRUD, primary key, and foreign key, names all SQL join types, and explains the key differences between SQL and GraphQL including the JSON response format.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> any beginner SQL course (SQLBolt / Codecademy-style) · project staging DB access · "GraphQL vs SQL" intro article</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="case" data-case="QA-IDP-04">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-04</span>
+          <span class="case-title">API Testing with Postman</span>
+          <span class="priority medium">Medium</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Already comfortable using Swagger for auth/token checks — a solid base. The next step is building a fuller picture of API concepts (API vs Web Service, what to check during API testing, API vs UI testing, REST vs SOAP, JSON structure, API documentation) and getting hands-on with Postman, which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn what API is: a set of functions that lets apps access data and interact with external components, operating systems, or microservices — acting as an intermediary between two programs</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Learn the key differences between an API and a Web Service: protocols used, communication style, supported protocols (HTTP vs HTTP/HTTPS), data formats (XML vs XML+JSON), and that all web services are APIs but not all APIs are web services</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn the difference between API Testing and UI Testing</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn why API testing is considered the most suitable form of testing for automation: a stable interface, efficient coverage of all functional paths, easier maintenance, and faster results</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Learn what to check during API testing: data accuracy, schema validation, HTTP status codes, data type/order/completeness, authorization, response timeout, error codes, and related non-functional aspects (performance, security)</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Learn the typical kinds of bugs API testing finds: duplicate or missing functionality, unhandled error conditions, connection/response issues, incorrect error messages, and security/performance issues</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Learn the two main API types — REST (uses JSON, used in Swagger) and SOAP (uses XML) — and how they differ</label></li>
+            <li class="step"><input type="checkbox" data-step="7"><label>Learn the structure of JSON (key/value pairs, quotes, commas) and practice reading a real JSON response</label></li>
+            <li class="step"><input type="checkbox" data-step="8"><label>Learn what API documentation is and what a documentation tool is (e.g. Swagger)</label></li>
+            <li class="step"><input type="checkbox" data-step="9"><label>Complete a Postman fundamentals tutorial (collections, environments, variables)</label></li>
+            <li class="step"><input type="checkbox" data-step="10"><label>Learn what Postman is used for: composing/sending HTTP requests, building collections and folders, changing request parameters, running automated API tests</label></li>
+            <li class="step"><input type="checkbox" data-step="11"><label>Rebuild one existing Swagger check as a Postman request</label></li>
+            <li class="step"><input type="checkbox" data-step="12"><label>Add assertions/tests to a Postman request (status code, response body checks)</label></li>
+            <li class="step"><input type="checkbox" data-step="13"><label>Pair with lead on 2–3 real API testing tasks using Postman</label></li>
+            <li class="step"><input type="checkbox" data-step="14"><label>Build one small collection covering a full user flow (e.g. login → action → verify)</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Explains the differences between API and Web Service, and between API and UI testing; lists what to check during API testing and the typical bug types it finds; explains REST vs SOAP and reads/writes basic JSON; builds and runs a Postman collection with assertions, without supervision.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> Postman's official "Getting Started" tutorials · REST vs SOAP intro article</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="case" data-case="QA-IDP-05">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-05</span>
+          <span class="case-title">Requirement Analysis Exposure</span>
+          <span class="priority medium">Medium</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Not yet involved in requirement gathering on current projects, which makes this a natural area to grow into. Worth building a clearer picture of Acceptance Criteria vs Definition of Done, static testing, Definition of Ready, business vs functional requirements, and the traceability matrix, which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn what a requirement is: the basic conditions the system must meet</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Learn what a user story is, and who writes it and when (typically PM or business analyst, during requirement gathering)</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn what acceptance criteria are used for, and who writes them and when (typically Product Owner or Project Manager)</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn what static testing is and its 2 types: Review and Static Analysis</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Learn why static testing is useful: early bug detection, faster fixes, and saving time and money compared to finding bugs later</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Learn what "Definition of Ready" means, with a real example from your own project</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Learn what "Definition of Done" means, with a real example from your own project</label></li>
+            <li class="step"><input type="checkbox" data-step="7"><label>Learn the difference between business requirements (the "what" and "why") and functional requirements (the "how")</label></li>
+            <li class="step"><input type="checkbox" data-step="8"><label>Learn what a traceability matrix is and how QA engineers use it to validate test coverage</label></li>
+            <li class="step"><input type="checkbox" data-step="9"><label>Practice building a simple requirements traceability matrix, mapping requirements to test cases</label></li>
+            <li class="step"><input type="checkbox" data-step="10"><label>Review the definitions of Acceptance Criteria vs Definition of Done with lead, using 2 real tickets</label></li>
+            <li class="step"><input type="checkbox" data-step="11"><label>Ask to sit in on 2 requirement/grooming discussions, even as an observer</label></li>
+            <li class="step"><input type="checkbox" data-step="12"><label>Write Acceptance Criteria yourself for one upcoming ticket, then compare with PM's version</label></li>
+            <li class="step"><input type="checkbox" data-step="13"><label>Proactively raise a requirement question on at least 2 real tickets before test design starts</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Correctly defines requirement, user story, acceptance criteria, static testing, Definition of Ready/Done, and the difference between business and functional requirements. Explains what a traceability matrix is and how to build one. Proactively raises requirement questions on real tickets.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> upcoming grooming/planning sessions · 1:1 time with lead or PM · ISTQB Foundation syllabus, static testing chapter</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" data-phase="p3">
+    <div class="phase-head">
+      <div class="phase-title"><span class="phase-tag">Phase 3</span> Documentation, Management &amp; Review Prep</div>
+      <div class="phase-dates">Months 7–9</div>
+    </div>
+    <div class="phase-progress" style="margin-bottom:16px;">
+      <span>Phase progress</span>
+      <div class="mini-track"><div class="mini-fill" data-qfill="p3"></div></div>
+      <span data-qlabel="p3">0%</span>
+    </div>
+    <p class="phase-blurb">Close out the plan with documentation habits and test management basics, then consolidate everything into a dry run of the real assessment — so nothing on review day is a surprise.</p>
+
+    <div class="case" data-case="QA-IDP-06">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-06</span>
+          <span class="case-title">Test Documentation &amp; Case Management</span>
+          <span class="priority medium">Medium</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Already understands the difference between a test case and a checklist conceptually — a good base. Has mostly worked in Excel so far, so this is a good opportunity to get hands-on with a TCM tool, formal test design techniques, defect terminology/lifecycle, and severity vs priority, which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn the 6 stages of SDLC and that test cases are typically written early — during requirements gathering — based on requirements and use cases</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Learn what a test case is and its main attributes: ID, Name, Preconditions, Steps, Expected result, Actual result, Attachments</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn the difference between a use case and a test case</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn why test management tools (TMS) are important, and get familiar with at least one (e.g. TestRail, TestLink, or TestFLO for Jira)</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Learn the black-box test design techniques (Equivalence Partitioning, Boundary Value Analysis, Decision Table, Pairwise Testing, Cause/Effect, Error Guessing, Exploratory Testing, Exhaustive Testing) and practice Equivalence Partitioning + Boundary Value Analysis on one real input field</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Learn what experience-based testing is, including Ad-hoc and Exploratory testing, and when each is used</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Learn what a traceability matrix is and practice building one, mapping requirements to test cases</label></li>
+            <li class="step"><input type="checkbox" data-step="7"><label>Learn the terminology chain Error/mistake → Defect/Fault/Bug → Failure, and the difference between a defect and a bug</label></li>
+            <li class="step"><input type="checkbox" data-step="8"><label>Learn the full bug lifecycle: Submitted, New, Declined, Deferred, Opened, Assigned, Fixed, Verified, Reopened, Closed</label></li>
+            <li class="step"><input type="checkbox" data-step="9"><label>Learn the mandatory attributes of a well-described defect: title, assignee, precondition, steps to reproduce, actual result, expected result, environment, screenshots/video, severity</label></li>
+            <li class="step"><input type="checkbox" data-step="10"><label>Learn the difference between Severity and Priority, with the standard scales (Severity: Blocker/Critical/Major/Minor/Trivial; Priority: Top/High/Normal/Low), and a real "high priority, low severity" example</label></li>
+            <li class="step"><input type="checkbox" data-step="11"><label>Learn what a test progress report is and what it should communicate</label></li>
+            <li class="step"><input type="checkbox" data-step="12"><label>Get a trial account walkthrough of a TCM tool and convert one existing Excel checklist into structured test cases</label></li>
+            <li class="step"><input type="checkbox" data-step="13"><label>Run one smoke or regression pass using the tool instead of Excel</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Writes a well-structured test case with all standard attributes, explains and applies at least 2 black-box test design techniques, distinguishes defect vs bug and severity vs priority correctly, describes the full bug lifecycle, and works inside a TCM tool instead of Excel.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> tool trial account (TestRail / TestLink / TestFLO) · lead-provided test case template</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="case" data-case="QA-IDP-07">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-07</span>
+          <span class="case-title">Test Management Basics</span>
+          <span class="priority medium">Medium</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Starting point</div>
+          <div class="precondition">Currently covers tasks more ad hoc than with a structured method — a natural next step is building experience with test estimation and planning techniques, along with UAT and alpha vs beta testing, which is expected at Junior 3.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Learn what UAT (User Acceptance Testing) is: final testing performed after functional, system, and regression testing, done by end users to check the product meets business requirements</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>Learn who performs UAT (typically the client or end user)</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Learn the difference between alpha and beta testing, and the order they typically happen in (alpha, then beta)</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Learn the 6 test estimation techniques: Top-Down Estimate, Bottom-Up Estimate, Analogous Estimating, Parametric Estimate, Three-point Estimating, and What-If Analysis</label></li>
+            <li class="step"><input type="checkbox" data-step="4"><label>Shadow lead during one estimation session on a real task and identify which technique(s) were used</label></li>
+            <li class="step"><input type="checkbox" data-step="5"><label>Estimate one upcoming task independently before seeing lead's estimate, then compare and discuss the gap</label></li>
+            <li class="step"><input type="checkbox" data-step="6"><label>Reflect on your current testing process and write down 2–3 concrete suggestions for what could be improved</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Produces a reasoned estimate for a real task using a named technique, explains what UAT is and who performs it, distinguishes alpha vs beta testing, and names at least 2 concrete process improvements for the current team.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Resources</div>
+          <div class="resources"><i>Suggested:</i> lead mentoring session · internal estimation guidelines if available</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="case" data-case="QA-IDP-08">
+      <div class="case-head">
+        <div class="case-head-left">
+          <span class="case-id">QA-IDP-08</span>
+          <span class="case-title">Mock Assessment Dry-Run</span>
+          <span class="priority high">High</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="status-badge todo" data-status>NOT STARTED</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <div class="case-body">
+        <div class="field">
+          <div class="field-label">Precondition</div>
+          <div class="precondition">This is the capstone case — a rehearsal of the real Junior 3 assessment, using everything from QA-IDP-01 through 07.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Steps to learn</div>
+          <ul class="steps">
+            <li class="step"><input type="checkbox" data-step="0"><label>Re-score yourself against the original 15-section rubric</label></li>
+            <li class="step"><input type="checkbox" data-step="1"><label>For each growth area, prepare one concrete example from a real ticket you worked on this period</label></li>
+            <li class="step"><input type="checkbox" data-step="2"><label>Book a 30-min practice Q&amp;A session with your lead, mirroring the real assessment format</label></li>
+            <li class="step"><input type="checkbox" data-step="3"><label>Review this whole IDP top to bottom and note anything still unresolved</label></li>
+          </ul>
+        </div>
+        <div class="field">
+          <div class="field-label">Expected result</div>
+          <div class="expected">Walks into the real re-assessment with no unfamiliar topics and a self-score close to your lead's score.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Notes / progress log</div>
+          <textarea class="notes" placeholder="Jot down questions, links you found useful, or what clicked..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <h3>How to use this plan</h3>
+    <p>Work roughly one phase at a time, but feel free to move faster on anything that clicks quickly. Check off each step as you complete it — a test case flips to <b>PASS</b> once every step inside it is checked.</p>
+    <p>Your progress is saved automatically in this document, so you can close it and come back anytime over the next 9 months.</p>
+    <p>Reach out to Tetiana (QA Lead) whenever you need help or want to talk something through. Full re-assessment against the same rubric happens in 9 months.</p>
+  </div>
+
+  <p class="save-note" id="saveNote">Loading saved progress…</p>
+</div>
+
+<script>
+(function(){
+  const CASES = {
+    "QA-IDP-01": 11, "QA-IDP-02": 9, "QA-IDP-03": 12, "QA-IDP-04": 15,
+    "QA-IDP-05": 14, "QA-IDP-06": 14, "QA-IDP-07": 7, "QA-IDP-08": 4
+  };
+  const PHASE_CASES = {
+    p1: ["QA-IDP-01","QA-IDP-02"],
+    p2: ["QA-IDP-03","QA-IDP-04","QA-IDP-05"],
+    p3: ["QA-IDP-06","QA-IDP-07","QA-IDP-08"]
+  };
+  const STORAGE_KEY = "idp-diana-2026-progress";
+
+  let state = {};
+  Object.keys(CASES).forEach(id => {
+    state[id] = { steps: new Array(CASES[id]).fill(false), notes: "" };
+  });
+
+  function setReviewDate(){
+    const d = new Date();
+    d.setMonth(d.getMonth() + 9);
+    const opts = { year: 'numeric', month: 'long' };
+    document.getElementById('reviewDate').textContent = d.toLocaleDateString('en-US', opts);
+  }
+
+  function caseStatus(id){
+    const st = state[id];
+    const total = st.steps.length;
+    const done = st.steps.filter(Boolean).length;
+    if (done === 0) return 'todo';
+    if (done === total) return 'pass';
+    return 'progress';
+  }
+
+  function statusLabel(s){
+    if (s === 'pass') return 'PASS';
+    if (s === 'progress') return 'IN PROGRESS';
+    return 'NOT STARTED';
+  }
+
+  function render(){
+    Object.keys(CASES).forEach(id => {
+      const card = document.querySelector(`.case[data-case="${id}"]`);
+      if (!card) return;
+      const st = state[id];
+      card.querySelectorAll('.step').forEach((stepEl, i) => {
+        const cb = stepEl.querySelector('input[type=checkbox]');
+        cb.checked = !!st.steps[i];
+        stepEl.classList.toggle('checked', !!st.steps[i]);
+      });
+      const notesEl = card.querySelector('textarea.notes');
+      if (notesEl && notesEl.value !== st.notes) notesEl.value = st.notes;
+
+      const s = caseStatus(id);
+      const badge = card.querySelector('[data-status]');
+      badge.textContent = statusLabel(s);
+      badge.className = 'status-badge ' + s;
+    });
+    updateProgressBars();
+  }
+
+  function updateProgressBars(){
+    let totalSteps = 0, totalDone = 0;
+    Object.keys(CASES).forEach(id => {
+      totalSteps += state[id].steps.length;
+      totalDone += state[id].steps.filter(Boolean).length;
+    });
+    const pct = totalSteps ? Math.round((totalDone/totalSteps)*100) : 0;
+    document.getElementById('overallPct').textContent = pct + '%';
+    document.getElementById('overallBar').style.width = pct + '%';
+    document.getElementById('overallLabel').textContent = `${totalDone} / ${totalSteps} steps passed`;
+
+    Object.keys(PHASE_CASES).forEach(p => {
+      let pTotal = 0, pDone = 0;
+      PHASE_CASES[p].forEach(id => {
+        pTotal += state[id].steps.length;
+        pDone += state[id].steps.filter(Boolean).length;
+      });
+      const ppct = pTotal ? Math.round((pDone/pTotal)*100) : 0;
+      const fillEl = document.querySelector(`[data-qfill="${p}"]`);
+      const labelEl = document.querySelector(`[data-qlabel="${p}"]`);
+      if (fillEl) fillEl.style.width = ppct + '%';
+      if (labelEl) labelEl.textContent = ppct + '%';
+    });
+  }
+
+  let saveTimer = null;
+  function scheduleSave(){
+    const note = document.getElementById('saveNote');
+    note.textContent = 'Saving…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try{
+        await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+        note.textContent = 'Progress saved · ' + new Date().toLocaleTimeString();
+      }catch(e){
+        note.textContent = 'Could not save progress — your changes may not persist after closing this document.';
+      }
+    }, 500);
+  }
+
+  async function loadState(){
+    const note = document.getElementById('saveNote');
+    try{
+      const result = await window.storage.get(STORAGE_KEY, false);
+      if (result && result.value){
+        const saved = JSON.parse(result.value);
+        Object.keys(CASES).forEach(id => {
+          if (saved[id]){
+            state[id].steps = CASES[id] ? saved[id].steps.slice(0, CASES[id]) : saved[id].steps;
+            while (state[id].steps.length < CASES[id]) state[id].steps.push(false);
+            state[id].notes = saved[id].notes || "";
+          }
+        });
+      }
+      note.textContent = 'Progress saved automatically in this document.';
+    }catch(e){
+      note.textContent = 'Starting a fresh plan — progress will be saved automatically from now on.';
+    }
+    render();
+  }
+
+  function bindEvents(){
+    document.querySelectorAll('.case-head').forEach(head => {
+      head.addEventListener('click', () => {
+        head.closest('.case').classList.toggle('open');
+      });
+    });
+
+    document.querySelectorAll('.case').forEach(card => {
+      const id = card.getAttribute('data-case');
+      card.querySelectorAll('.step input[type=checkbox]').forEach((cb, i) => {
+        cb.addEventListener('click', (e) => e.stopPropagation());
+        cb.addEventListener('change', () => {
+          state[id].steps[i] = cb.checked;
+          cb.closest('.step').classList.toggle('checked', cb.checked);
+          const s = caseStatus(id);
+          const badge = card.querySelector('[data-status]');
+          badge.textContent = statusLabel(s);
+          badge.className = 'status-badge ' + s;
+          updateProgressBars();
+          scheduleSave();
+        });
+      });
+      const notesEl = card.querySelector('textarea.notes');
+      if (notesEl){
+        notesEl.addEventListener('click', (e) => e.stopPropagation());
+        notesEl.addEventListener('input', () => {
+          state[id].notes = notesEl.value;
+          scheduleSave();
+        });
+      }
+    });
+
+    // open first case of each phase by default
+    document.querySelectorAll('.phase').forEach(p => {
+      const first = p.querySelector('.case');
+      if (first) first.classList.add('open');
+    });
+  }
+
+  setReviewDate();
+  bindEvents();
+  loadState();
+})();
+</script>
+</body>
+</html>
